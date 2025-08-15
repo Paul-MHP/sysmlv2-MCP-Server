@@ -82,3 +82,70 @@ public record MCPContent
     [JsonPropertyName("text")]
     public string Text { get; init; } = "";
 }
+
+// MCP Initialize Protocol Models
+public record MCPInitializeParams
+{
+    [JsonPropertyName("protocolVersion")]
+    public string ProtocolVersion { get; init; } = "";
+    
+    [JsonPropertyName("capabilities")]
+    public MCPCapabilities Capabilities { get; init; } = new();
+    
+    [JsonPropertyName("clientInfo")]
+    public MCPClientInfo ClientInfo { get; init; } = new();
+}
+
+public record MCPCapabilities
+{
+    [JsonPropertyName("tools")]
+    public object? Tools { get; init; }
+    
+    [JsonPropertyName("resources")]
+    public object? Resources { get; init; }
+    
+    [JsonPropertyName("prompts")]
+    public object? Prompts { get; init; }
+}
+
+public record MCPClientInfo
+{
+    [JsonPropertyName("name")]
+    public string Name { get; init; } = "";
+    
+    [JsonPropertyName("version")]
+    public string Version { get; init; } = "";
+}
+
+public record MCPInitializeResult
+{
+    [JsonPropertyName("protocolVersion")]
+    public string ProtocolVersion { get; init; } = "2024-11-05";
+    
+    [JsonPropertyName("capabilities")]
+    public MCPServerCapabilities Capabilities { get; init; } = new();
+    
+    [JsonPropertyName("serverInfo")]
+    public MCPServerInfo ServerInfo { get; init; } = new();
+}
+
+public record MCPServerCapabilities
+{
+    [JsonPropertyName("tools")]
+    public MCPToolsCapability Tools { get; init; } = new();
+}
+
+public record MCPToolsCapability
+{
+    [JsonPropertyName("listChanged")]
+    public bool ListChanged { get; init; } = false;
+}
+
+public record MCPServerInfo
+{
+    [JsonPropertyName("name")]
+    public string Name { get; init; } = "SysML v2 MCP Server";
+    
+    [JsonPropertyName("version")]
+    public string Version { get; init; } = "1.0.0";
+}

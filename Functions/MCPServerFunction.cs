@@ -43,6 +43,7 @@ public class MCPServerFunction
 
             var response = mcpRequest.Method switch
             {
+                "initialize" => await HandleInitialize(mcpRequest),
                 "tools/list" => await HandleToolsList(mcpRequest),
                 "tools/call" => await HandleToolCall(mcpRequest),
                 _ => CreateMCPResponse(mcpRequest.Id, null, new MCPError
@@ -61,6 +62,45 @@ public class MCPServerFunction
         {
             _logger.LogError(ex, "Error handling MCP request");
             return await CreateErrorResponse(req, -1, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    private async Task<MCPResponse> HandleInitialize(MCPRequest request)
+    {
+        try
+        {
+            var initParams = JsonSerializer.Deserialize<MCPInitializeParams>(
+                JsonSerializer.Serialize(request.Params), _jsonOptions);
+
+            _logger.LogInformation($"MCP client initialized: {initParams?.ClientInfo?.Name ?? "Unknown"} v{initParams?.ClientInfo?.Version ?? "Unknown"}");
+
+            var result = new MCPInitializeResult
+            {
+                ProtocolVersion = "2024-11-05",
+                Capabilities = new MCPServerCapabilities
+                {
+                    Tools = new MCPToolsCapability
+                    {
+                        ListChanged = false
+                    }
+                },
+                ServerInfo = new MCPServerInfo
+                {
+                    Name = "SysML v2 MCP Server",
+                    Version = "1.0.0"
+                }
+            };
+
+            return CreateMCPResponse(request.Id, result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling initialize request");
+            return CreateMCPResponse(request.Id, null, new MCPError
+            {
+                Code = -32603,
+                Message = $"Initialize failed: {ex.Message}"
+            });
         }
     }
 
