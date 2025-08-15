@@ -1,0 +1,23 @@
+{
+  "name": "sysmlv2-mcp-server",
+  "version": "1.0.0",
+  "description": "A Model Context Protocol (MCP) server that provides AI assistants with access to SysML v2 API functionality through Azure Functions.",
+  "main": "test-mcp-protocol.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Paul-MHP/sysmlv2-MCP-Server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Paul-MHP/sysmlv2-MCP-Server/issues"
+  },
+  "homepage": "https://github.com/Paul-MHP/sysmlv2-MCP-Server#readme",
+  "dependencies": {
+    "azure-functions-core-tools": "^4.1.2"
+  }
+}
