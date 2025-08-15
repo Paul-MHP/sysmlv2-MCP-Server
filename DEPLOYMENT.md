@@ -2,14 +2,189 @@
 
 This guide provides step-by-step instructions for deploying the SysML v2 MCP Server to Azure Functions.
 
-## Prerequisites
+## Method 1: Azure Cloud Shell Deployment (Recommended)
 
-- Azure CLI installed and logged in
-- .NET 8.0 SDK installed
-- Azure Functions Core Tools v4
-- An active Azure subscription
+Deploy directly from Azure Cloud Shell - no local tools required!
 
-## Method 1: Azure CLI Deployment (Recommended)
+### Prerequisites
+- Azure subscription with appropriate permissions
+- Access to Azure Portal (portal.azure.com)
+
+### Step 1: Open Azure Cloud Shell
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Click the Cloud Shell icon (>_) in the top navigation bar
+3. Choose **Bash** when prompted
+4. Wait for Cloud Shell to initialize
+
+### Step 2: Clone and Setup Project
+```bash
+# Clone the repository
+git clone https://github.com/Paul-MHP/sysmlv2-MCP-Server.git
+cd sysmlv2-MCP-Server
+
+# Make scripts executable
+chmod +x deploy.sh
+```
+
+### Step 3: Run Complete Deployment Script
+```bash
+# Create the deployment script
+cat > deploy.sh << 'EOF'
+#!/bin/bash
+
+# Configuration variables
+RESOURCE_GROUP="sysmlv2-mcp-rg"
+LOCATION="East US"
+STORAGE_ACCOUNT="sysmlv2mcpstorage$(date +%s)"
+FUNCTION_APP="sysmlv2-mcp-server-$(date +%s)"
+SYSML_API_URL="https://sysml-api-webapp-2024.azurewebsites.net"
+
+echo "🚀 Starting SysML v2 MCP Server deployment..."
+echo "Resource Group: $RESOURCE_GROUP"
+echo "Function App: $FUNCTION_APP"
+echo "Storage Account: $STORAGE_ACCOUNT"
+
+# Step 1: Create resource group
+echo "📁 Creating resource group..."
+az group create \
+  --name "$RESOURCE_GROUP" \
+  --location "$LOCATION"
+
+if [ $? -eq 0 ]; then
+  echo "✅ Resource group created successfully"
+else
+  echo "❌ Failed to create resource group"
+  exit 1
+fi
+
+# Step 2: Create storage account
+echo "💾 Creating storage account..."
+az storage account create \
+  --name "$STORAGE_ACCOUNT" \
+  --resource-group "$RESOURCE_GROUP" \
+  --location "$LOCATION" \
+  --sku "Standard_LRS" \
+  --kind "StorageV2"
+
+if [ $? -eq 0 ]; then
+  echo "✅ Storage account created successfully"
+else
+  echo "❌ Failed to create storage account"
+  exit 1
+fi
+
+# Step 3: Create function app
+echo "⚡ Creating Azure Function App..."
+az functionapp create \
+  --resource-group "$RESOURCE_GROUP" \
+  --consumption-plan-location "$LOCATION" \
+  --runtime "dotnet-isolated" \
+  --runtime-version "8" \
+  --functions-version "4" \
+  --name "$FUNCTION_APP" \
+  --storage-account "$STORAGE_ACCOUNT" \
+  --disable-app-insights false
+
+if [ $? -eq 0 ]; then
+  echo "✅ Function app created successfully"
+else
+  echo "❌ Failed to create function app"
+  exit 1
+fi
+
+# Step 4: Configure environment variables
+echo "🔧 Configuring environment variables..."
+az functionapp config appsettings set \
+  --name "$FUNCTION_APP" \
+  --resource-group "$RESOURCE_GROUP" \
+  --settings "SYSML_API_BASE_URL=$SYSML_API_URL"
+
+# Step 5: Enable CORS
+echo "🌐 Enabling CORS..."
+az functionapp cors add \
+  --name "$FUNCTION_APP" \
+  --resource-group "$RESOURCE_GROUP" \
+  --allowed-origins "*"
+
+# Step 6: Build and deploy code
+echo "📦 Building and deploying code..."
+
+# Install Azure Functions Core Tools if not available
+if ! command -v func &> /dev/null; then
+  echo "📥 Installing Azure Functions Core Tools..."
+  npm install -g azure-functions-core-tools@4 --unsafe-perm true
+fi
+
+# Build the project
+echo "🔨 Building .NET project..."
+dotnet build --configuration Release
+
+# Deploy to Azure
+echo "🚀 Deploying to Azure..."
+func azure functionapp publish "$FUNCTION_APP" --force
+
+if [ $? -eq 0 ]; then
+  echo "✅ Deployment completed successfully!"
+  echo ""
+  echo "🎉 Your MCP Server is deployed!"
+  echo "Function App URL: https://$FUNCTION_APP.azurewebsites.net"
+  echo "MCP Endpoint: https://$FUNCTION_APP.azurewebsites.net/api/mcp"
+  echo ""
+  echo "🧪 Test your deployment:"
+  echo "curl -X POST https://$FUNCTION_APP.azurewebsites.net/api/mcp \\"
+  echo "  -H 'Content-Type: application/json' \\"
+  echo "  -d '{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"tools/list\"}'"
+  echo ""
+  echo "📚 Next steps:"
+  echo "1. Test the MCP endpoint above"
+  echo "2. Follow CLAUDE_INTEGRATION.md to connect with Claude"
+  echo "3. Update your Claude configuration with the Function App URL"
+else
+  echo "❌ Deployment failed"
+  exit 1
+fi
+EOF
+
+# Make script executable and run
+chmod +x deploy.sh
+./deploy.sh
+```
+
+### Step 4: Test Your Deployment
+After deployment completes, test the MCP server:
+
+```bash
+# Replace with your actual function app URL from the deployment output
+FUNCTION_URL="https://sysmlv2-mcp-server-XXXXXX.azurewebsites.net"
+
+# Test the MCP tools list
+curl -X POST $FUNCTION_URL/api/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "tools/list"
+  }'
+```
+
+Expected response:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "result": {
+    "tools": [
+      {"name": "list_projects", "description": "List all SysML v2 projects"},
+      {"name": "get_project", "description": "Get details of a specific SysML v2 project"},
+      ...
+    ]
+  }
+}
+```
+
+## Method 2: Manual Azure CLI Deployment
+
+If you prefer step-by-step manual deployment:
 
 ### Step 1: Login and Setup
 ```bash
