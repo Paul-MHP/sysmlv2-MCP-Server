@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "sysml": {
+      "command": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "C:\\Users\\pschiel\\mcp-bridge.js"
+      ]
+    }
+  }
+}

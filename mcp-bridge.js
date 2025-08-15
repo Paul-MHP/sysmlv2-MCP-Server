@@ -3,7 +3,7 @@
 const http = require('http');
 const https = require('https');
 
-// Your MCP server URL
+// Your MCP server URL  
 const MCP_SERVER_URL = 'https://sysmlv2-mcp-server-70764.azurewebsites.net/api/mcp?auth=false';
 
 // Simple HTTP client to proxy requests

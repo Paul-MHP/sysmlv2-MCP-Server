@@ -41,7 +41,7 @@ public class MCPServerFunction
             if (!OAuthFunction.ValidateAccessToken(authHeader))
             {
                 _logger.LogInformation("OAuth validation failed, but auth can be bypassed with ?auth=false");
-                return await CreateErrorResponse(req, -32600, "Unauthorized: Valid OAuth token required (or use ?auth=false to bypass)");
+                return await CreateErrorResponse(req, null, -32600, "Unauthorized: Valid OAuth token required (or use ?auth=false to bypass)");
             }
         }
 
@@ -52,30 +52,38 @@ public class MCPServerFunction
 
             if (mcpRequest == null)
             {
-                return await CreateErrorResponse(req, -1, "Invalid request format");
+                return await CreateErrorResponse(req, null, -1, "Invalid request format");
             }
 
-            var response = mcpRequest.Method switch
+            try
             {
-                "initialize" => await HandleInitialize(mcpRequest),
-                "tools/list" => await HandleToolsList(mcpRequest),
-                "tools/call" => await HandleToolCall(mcpRequest),
-                _ => CreateMCPResponse(mcpRequest.Id, null, new MCPError
+                var response = mcpRequest.Method switch
                 {
-                    Code = -32601,
-                    Message = $"Method not found: {mcpRequest.Method}"
-                })
-            };
+                    "initialize" => await HandleInitialize(mcpRequest),
+                    "tools/list" => await HandleToolsList(mcpRequest),
+                    "tools/call" => await HandleToolCall(mcpRequest),
+                    _ => CreateMCPResponse(mcpRequest.Id, null, new MCPError
+                    {
+                        Code = -32601,
+                        Message = $"Method not found: {mcpRequest.Method}"
+                    })
+                };
 
-            var responseData = req.CreateResponse(HttpStatusCode.OK);
-            responseData.Headers.Add("Content-Type", "application/json");
-            await responseData.WriteStringAsync(JsonSerializer.Serialize(response, _jsonOptions));
-            return responseData;
+                var responseData = req.CreateResponse(HttpStatusCode.OK);
+                responseData.Headers.Add("Content-Type", "application/json");
+                await responseData.WriteStringAsync(JsonSerializer.Serialize(response, _jsonOptions));
+                return responseData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error handling MCP request");
+                return await CreateErrorResponse(req, mcpRequest.Id, -1, $"Internal server error: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling MCP request");
-            return await CreateErrorResponse(req, -1, $"Internal server error: {ex.Message}");
+            _logger.LogError(ex, "Error parsing MCP request");
+            return await CreateErrorResponse(req, null, -1, $"Invalid request: {ex.Message}");
         }
     }
 
@@ -537,10 +545,11 @@ public class MCPServerFunction
         };
     }
 
-    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, int code, string message)
+    private async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, string? id, int code, string message)
     {
         var error = new MCPResponse
         {
+            Id = id,
             Error = new MCPError { Code = code, Message = message }
         };
 
