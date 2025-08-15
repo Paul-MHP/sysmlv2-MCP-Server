@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: sysmlv2-mcp-server
+metadata:
+  template: sysmlv2-mcp-server@0.0.1-beta
+
+services:
+  api:
+    project: .
+    language: dotnet
+    host: function
+
+hooks:
+  postdeploy:
+    shell: sh
+    run: echo "Deployment completed successfully!"
+    continueOnError: false
