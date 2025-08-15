@@ -26,9 +26,11 @@ public record MCPResponse
     public string? Id { get; init; }
     
     [JsonPropertyName("result")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public object? Result { get; init; }
     
     [JsonPropertyName("error")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public MCPError? Error { get; init; }
 }
 

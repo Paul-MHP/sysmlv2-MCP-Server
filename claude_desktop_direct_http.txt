@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sysml": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "-H", "Content-Type: application/json",
+        "-d", "@-",
+        "https://sysmlv2-mcp-server-70764.azurewebsites.net/api/mcp?auth=false"
+      ]
+    }
+  }
+}

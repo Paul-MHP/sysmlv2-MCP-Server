@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "sysml": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\pschiel\\simple-bridge.js"
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "sysml": {
+      "type": "sse",
+      "url": "https://sysmlv2-mcp-server-70764.azurewebsites.net/api/mcp?auth=false",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sysml": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything",
+        "--http",
+        "https://sysmlv2-mcp-server-70764.azurewebsites.net/api/mcp?auth=false"
+      ]
+    }
+  }
+}
