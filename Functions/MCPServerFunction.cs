@@ -31,6 +31,13 @@ public class MCPServerFunction
     {
         _logger.LogInformation("MCP request received");
 
+        // Check OAuth authorization
+        var authHeader = req.Headers.FirstOrDefault(h => h.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault();
+        if (!OAuthFunction.ValidateAccessToken(authHeader))
+        {
+            return await CreateErrorResponse(req, -32600, "Unauthorized: Valid OAuth token required");
+        }
+
         try
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();

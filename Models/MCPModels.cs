@@ -149,3 +149,64 @@ public record MCPServerInfo
     [JsonPropertyName("version")]
     public string Version { get; init; } = "1.0.0";
 }
+
+// OAuth Models
+public record OAuthTokenRequest
+{
+    [JsonPropertyName("grant_type")]
+    public string GrantType { get; init; } = "";
+    
+    [JsonPropertyName("client_id")]
+    public string ClientId { get; init; } = "";
+    
+    [JsonPropertyName("client_secret")]
+    public string ClientSecret { get; init; } = "";
+    
+    [JsonPropertyName("code")]
+    public string? Code { get; init; }
+    
+    [JsonPropertyName("redirect_uri")]
+    public string? RedirectUri { get; init; }
+}
+
+public record OAuthTokenResponse
+{
+    [JsonPropertyName("access_token")]
+    public string AccessToken { get; init; } = "";
+    
+    [JsonPropertyName("token_type")]
+    public string TokenType { get; init; } = "Bearer";
+    
+    [JsonPropertyName("expires_in")]
+    public int ExpiresIn { get; init; } = 3600;
+    
+    [JsonPropertyName("scope")]
+    public string? Scope { get; init; }
+}
+
+public record OAuthErrorResponse
+{
+    [JsonPropertyName("error")]
+    public string Error { get; init; } = "";
+    
+    [JsonPropertyName("error_description")]
+    public string? ErrorDescription { get; init; }
+}
+
+public record OAuthMetadata
+{
+    [JsonPropertyName("authorization_endpoint")]
+    public string AuthorizationEndpoint { get; init; } = "";
+    
+    [JsonPropertyName("token_endpoint")]
+    public string TokenEndpoint { get; init; } = "";
+    
+    [JsonPropertyName("response_types_supported")]
+    public string[] ResponseTypesSupported { get; init; } = new[] { "code" };
+    
+    [JsonPropertyName("grant_types_supported")]
+    public string[] GrantTypesSupported { get; init; } = new[] { "authorization_code", "client_credentials" };
+    
+    [JsonPropertyName("scopes_supported")]
+    public string[] ScopesSupported { get; init; } = new[] { "mcp:read", "mcp:write" };
+}
