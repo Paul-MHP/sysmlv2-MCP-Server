@@ -31,11 +31,18 @@ public class MCPServerFunction
     {
         _logger.LogInformation("MCP request received");
 
-        // Check OAuth authorization
-        var authHeader = req.Headers.FirstOrDefault(h => h.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault();
-        if (!OAuthFunction.ValidateAccessToken(authHeader))
+        // Check OAuth authorization (optional - can be bypassed with ?auth=false)
+        var query = req.Url.Query;
+        var skipAuth = query.Contains("auth=false", StringComparison.OrdinalIgnoreCase);
+        
+        if (!skipAuth)
         {
-            return await CreateErrorResponse(req, -32600, "Unauthorized: Valid OAuth token required");
+            var authHeader = req.Headers.FirstOrDefault(h => h.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase)).Value?.FirstOrDefault();
+            if (!OAuthFunction.ValidateAccessToken(authHeader))
+            {
+                _logger.LogInformation("OAuth validation failed, but auth can be bypassed with ?auth=false");
+                return await CreateErrorResponse(req, -32600, "Unauthorized: Valid OAuth token required (or use ?auth=false to bypass)");
+            }
         }
 
         try
