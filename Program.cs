@@ -1,16 +1,12 @@
-using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using SysMLMCPServer.Services;
 
-var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication()
-    .ConfigureServices(services => {
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
-        services.AddHttpClient();
-        services.AddSingleton<SysMLApiService>();
-    })
-    .Build();
+var builder = FunctionsApplication.CreateBuilder(args);
+builder.ConfigureFunctionsWebApplication();
 
-host.Run();
+// Configure services
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<SysMLApiService>();
+
+builder.Build().Run();

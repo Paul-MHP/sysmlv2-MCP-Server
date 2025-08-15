@@ -1,0 +1,16 @@
+RESOURCE_GROUP="287013_Scalable_AI_Applications"
+LOCATION="West Europe"
+STORAGE_ACCOUNT="sysmlv2mcpstorage$(date +%s | tail -c 6)"
+FUNCTION_APP="sysmlv2-mcp-server"
+SYSML_API_URL="https://sysml-api-webapp-2024.azurewebsites.net"
+
+echo "🚀 Starting deployment..." && \
+az storage account create --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" --location "$LOCATION" --sku "Standard_LRS" --kind "StorageV2" && \
+echo "✅ Storage created" && \
+az functionapp create --resource-group "$RESOURCE_GROUP" --consumption-plan-location "$LOCATION" --runtime "dotnet-isolated" --runtime-version "8" --functions-version "4" --name "$FUNCTION_APP" --storage-account "$STORAGE_ACCOUNT" --disable-app-insights false && \
+echo "✅ Function app created" && \
+az functionapp config appsettings set --name "$FUNCTION_APP" --resource-group "$RESOURCE_GROUP" --settings "SYSML_API_BASE_URL=$SYSML_API_URL" && \
+az functionapp cors add --name "$FUNCTION_APP" --resource-group "$RESOURCE_GROUP" --allowed-origins "*" && \
+az functionapp deployment source config --name "$FUNCTION_APP" --resource-group "$RESOURCE_GROUP" --repo-url "https://github.com/Paul-MHP/sysmlv2-MCP-Server.git" --branch "main" --manual-integration && \
+echo "🎉 Deployment complete! Test with:" && \
+echo "curl -X POST https://$FUNCTION_APP.azurewebsites.net/api/mcp -H 'Content-Type: application/json' -d '{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"method\":\"tools/list\"}'"
