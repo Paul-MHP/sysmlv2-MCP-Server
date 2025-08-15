@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "MCP_DOCKER": {
+      "command": "docker",
+      "args": ["mcp", "gateway", "run"],
+      "env": {
+        "LOCALAPPDATA": "C:\\Users\\pschiel\\AppData\\Local",
+        "ProgramData": "C:\\ProgramData",
+        "ProgramFiles": "C:\\Program Files"
+      }
+    },
+    "sysml-v2-server": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\pschiel\\mcp-bridge.js"
+      ]
+    }
+  }
+}

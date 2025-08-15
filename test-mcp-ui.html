@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysML v2 MCP Server Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        .response { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+        .error { background: #ffe6e6; border-left: 4px solid #ff0000; }
+        .success { background: #e6ffe6; border-left: 4px solid #00aa00; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .tool-form { background: #f9f9f9; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SysML v2 MCP Server Test Interface</h1>
+        
+        <h2>Server Configuration</h2>
+        <input type="text" id="serverUrl" value="https://sysmlv2-mcp-server-70764.azurewebsites.net/api/mcp?auth=false" placeholder="Server URL">
+        
+        <h2>Quick Tests</h2>
+        <button onclick="testInitialize()">Test Initialize</button>
+        <button onclick="testToolsList()">List Tools</button>
+        <button onclick="testListProjects()">List Projects</button>
+        
+        <h2>Tool Tests</h2>
+        <div class="tool-form">
+            <h3>Create Project</h3>
+            <input type="text" id="projectName" placeholder="Project Name" value="Test Project">
+            <input type="text" id="projectDesc" placeholder="Project Description" value="Created via MCP test interface">
+            <button onclick="testCreateProject()">Create Project</button>
+        </div>
+        
+        <div class="tool-form">
+            <h3>Get Project</h3>
+            <input type="text" id="getProjectId" placeholder="Project ID">
+            <button onclick="testGetProject()">Get Project</button>
+        </div>
+        
+        <h2>Custom Request</h2>
+        <textarea id="customRequest" rows="10" placeholder="Enter JSON-RPC request">
+{
+  "jsonrpc": "2.0",
+  "id": "custom",
+  "method": "tools/list"
+}
+        </textarea>
+        <button onclick="sendCustomRequest()">Send Custom Request</button>
+        
+        <h2>Response</h2>
+        <div id="response" class="response">Ready to test...</div>
+    </div>
+
+    <script>
+        function getServerUrl() {
+            return document.getElementById('serverUrl').value;
+        }
+        
+        function showResponse(data, isError = false) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.textContent = JSON.stringify(data, null, 2);
+            responseDiv.className = 'response ' + (isError ? 'error' : 'success');
+        }
+        
+        async function sendRequest(payload) {
+            try {
+                const response = await fetch(getServerUrl(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                showResponse(data, data.error !== null);
+                return data;
+            } catch (error) {
+                showResponse({ error: error.message }, true);
+            }
+        }
+        
+        function testInitialize() {
+            sendRequest({
+                "jsonrpc": "2.0",
+                "id": "init",
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {
+                        "name": "MCP Test UI",
+                        "version": "1.0.0"
+                    }
+                }
+            });
+        }
+        
+        function testToolsList() {
+            sendRequest({
+                "jsonrpc": "2.0",
+                "id": "tools",
+                "method": "tools/list"
+            });
+        }
+        
+        function testListProjects() {
+            sendRequest({
+                "jsonrpc": "2.0",
+                "id": "list_projects",
+                "method": "tools/call",
+                "params": {
+                    "name": "list_projects",
+                    "arguments": {}
+                }
+            });
+        }
+        
+        function testCreateProject() {
+            const name = document.getElementById('projectName').value;
+            const description = document.getElementById('projectDesc').value;
+            
+            sendRequest({
+                "jsonrpc": "2.0",
+                "id": "create_project",
+                "method": "tools/call",
+                "params": {
+                    "name": "create_project",
+                    "arguments": {
+                        "name": name,
+                        "description": description
+                    }
+                }
+            });
+        }
+        
+        function testGetProject() {
+            const projectId = document.getElementById('getProjectId').value;
+            
+            if (!projectId) {
+                alert('Please enter a Project ID');
+                return;
+            }
+            
+            sendRequest({
+                "jsonrpc": "2.0",
+                "id": "get_project",
+                "method": "tools/call",
+                "params": {
+                    "name": "get_project",
+                    "arguments": {
+                        "projectId": projectId
+                    }
+                }
+            });
+        }
+        
+        function sendCustomRequest() {
+            try {
+                const requestText = document.getElementById('customRequest').value;
+                const payload = JSON.parse(requestText);
+                sendRequest(payload);
+            } catch (error) {
+                showResponse({ error: 'Invalid JSON: ' + error.message }, true);
+            }
+        }
+    </script>
+</body>
+</html>
